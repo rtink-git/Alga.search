@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "bcQQjReMvDg=",
+  "success": true,
+  "projectFilePath": "/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/Alga.search.csproj",
+  "expectedPackageFiles": [
+    "/Users/airatgalimov/.nuget/packages/microsoft.extensions.dependencyinjection/9.0.0/microsoft.extensions.dependencyinjection.9.0.0.nupkg.sha512",
+    "/Users/airatgalimov/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.0/microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
+    "/Users/airatgalimov/.nuget/packages/microsoft.extensions.logging/9.0.0/microsoft.extensions.logging.9.0.0.nupkg.sha512",
+    "/Users/airatgalimov/.nuget/packages/microsoft.extensions.logging.abstractions/9.0.0/microsoft.extensions.logging.abstractions.9.0.0.nupkg.sha512",
+    "/Users/airatgalimov/.nuget/packages/microsoft.extensions.options/9.0.0/microsoft.extensions.options.9.0.0.nupkg.sha512",
+    "/Users/airatgalimov/.nuget/packages/microsoft.extensions.primitives/9.0.0/microsoft.extensions.primitives.9.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,12 @@
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/Alga.search.deps.json
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/Alga.search.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/Alga.search.pdb
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.GeneratedMSBuildEditorConfig.editorconfig
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.AssemblyInfoInputs.cache
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.AssemblyInfo.cs
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.csproj.CoreCompileInputs.cache
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/refint/Alga.search.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.pdb
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/ref/Alga.search.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.csproj.AssemblyReference.cache

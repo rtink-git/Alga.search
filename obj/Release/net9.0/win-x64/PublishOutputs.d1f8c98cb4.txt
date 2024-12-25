@@ -1,0 +1,9 @@
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Alga.search.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Alga.search.deps.json
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Alga.search.pdb
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.DependencyInjection.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Logging.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Logging.Abstractions.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Options.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Primitives.dll
