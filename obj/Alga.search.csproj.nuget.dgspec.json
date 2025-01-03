@@ -5,7 +5,7 @@
   },
   "projects": {
     "/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/Alga.search.csproj": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "restore": {
         "projectUniqueName": "/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/Alga.search.csproj",
         "projectName": "Alga.search",
@@ -66,11 +66,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
         }
       }
     }

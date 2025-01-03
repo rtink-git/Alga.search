@@ -10,3 +10,4 @@
 /Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.pdb
 /Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/ref/Alga.search.dll
 /Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.csproj.AssemblyReference.cache
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/obj/Release/net9.0/Alga.search.sourcelink.json
