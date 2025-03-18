@@ -7,3 +7,11 @@
 /Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Logging.Abstractions.dll
 /Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Options.dll
 /Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/Microsoft.Extensions.Primitives.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.CodeDom.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Configuration.ConfigurationManager.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Diagnostics.DiagnosticSource.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Diagnostics.EventLog.Messages.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Diagnostics.EventLog.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Diagnostics.PerformanceCounter.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Management.dll
+/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/win-x64/publish/System.Security.Cryptography.ProtectedData.dll

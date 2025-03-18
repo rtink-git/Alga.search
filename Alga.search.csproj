@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Alga.search</PackageId>
-    <Version>1.0.1</Version>
+    <Version>2.0.0</Version>
     <Author>rtink.git@gmail.com</Author>
     <Product>Alga.search</Product>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -22,7 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
 
 </Project>

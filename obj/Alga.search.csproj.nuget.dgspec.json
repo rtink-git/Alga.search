@@ -5,7 +5,7 @@
   },
   "projects": {
     "/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/Alga.search.csproj": {
-      "version": "1.0.1",
+      "version": "2.0.0",
       "restore": {
         "projectUniqueName": "/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/Alga.search.csproj",
         "projectName": "Alga.search",
@@ -44,6 +44,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.Extensions.Caching.Memory": {
+              "target": "Package",
+              "version": "[9.0.3, )"
+            },
             "Microsoft.Extensions.Logging": {
               "target": "Package",
               "version": "[9.0.0, )"
