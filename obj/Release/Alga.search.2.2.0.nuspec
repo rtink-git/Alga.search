@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Alga.search</id>
+    <version>2.2.0</version>
+    <authors>Alga.search</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <description>Package Description</description>
+    <repository type="git" url="https://github.com/rtink-git/Alga.search" commit="9e77b272431f235aba1c2be3bdf37f60e4d5f77c" />
+    <dependencies>
+      <group targetFramework="net9.0">
+        <dependency id="Microsoft.Extensions.Caching.Memory" version="9.0.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Logging" version="9.0.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/bin/Release/net9.0/Alga.search.dll" target="lib/net9.0/Alga.search.dll" />
+    <file src="/Users/airatgalimov/Documents/Airat/Projects/Alga/Alga.search/Alga.search/README.md" target="README.md" />
+  </files>
+</package>

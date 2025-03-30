@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Buffers;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Alga.search;
 /// <summary>
@@ -15,6 +17,7 @@ public static class Titles {
     /// <summary>
     /// Represents a unique identifier for a title, combining a list ID and a title ID.
     /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     readonly struct TitleKey : IEquatable<TitleKey> {
         public byte ListId { get; }
         public long Id { get; }
@@ -24,6 +27,7 @@ public static class Titles {
         /// </summary>
         /// <param name="listId"></param>
         /// <param name="id"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TitleKey(byte listId, long id) {
             ListId = listId;
             Id = id;
@@ -33,18 +37,21 @@ public static class Titles {
         /// Gets the hash code of the TitleKey.
         /// </summary>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode() => HashCode.Combine(ListId, Id);
         /// <summary>
         /// Determines whether the specified object is equal to the current TitleKey.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object? obj) => obj is TitleKey other && Equals(other);
         /// <summary>
         /// Determines whether the current TitleKey is equal to another TitleKey.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(TitleKey other) => ListId == other.ListId && Id == other.Id;
     }
 
@@ -53,14 +60,14 @@ public static class Titles {
     /// Additionally, includes a dictionary of similar titles with their respective similarity coefficients.
     /// Average row size: 232 bytes.
     /// </summary>
-    static readonly ConcurrentDictionary<TitleKey, ReadOnlyMemory<long>> BaseList = new();
+    static readonly ConcurrentDictionary<TitleKey, ReadOnlyMemory<long>> BaseList = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
 
     /// <summary>
     /// A list of words and the titles that contain these words.
     /// The key is the word's hash code, and the value is a list of title IDs (long).
     /// Average row size: 1280 bytes.
     /// </summary>
-    static readonly ConcurrentDictionary<long, ConcurrentDictionary<TitleKey, byte>> WordsList = new ();
+    static readonly ConcurrentDictionary<long, ConcurrentDictionary<TitleKey, byte>> WordsList = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
 
     /// <summary>
     /// Retrieves a list of titles by their ID, with filtering options for the number of results and similarity threshold.
@@ -71,29 +78,29 @@ public static class Titles {
     /// <param name="minSimilar"></param>
     /// <param name="cacheInMin"></param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static List<long>? GetById(long id, byte listId=0, int take=100, float minSimilar=0.1f, int cacheInMin = 0) {
-        // var dt = DateTime.UtcNow; // for testing
+        var dt = DateTime.UtcNow; // for testing
         
-        // try {
+        try {
             if (!BaseList.TryGetValue(new TitleKey(0, id), out var astVal) || astVal.IsEmpty)
                 return null;
 
             var cs = new _Cache.Session(id.ToString(), listId, cacheInMin);
-            if(cs.ReturnList is not null) 
-                return cs.ReturnList;
+            if(cs.ReturnList is not null) return cs.ReturnList;
 
-            var result = GetSearchListResult(new HashSet<long>(astVal.ToArray()), listId, take, minSimilar);
+            var result = GetSearchListResult(new (astVal.ToArray()), listId, take, minSimilar);
             cs.Set(result);
 
             return result;
-        // } catch {
-        //     var testPoint = true;
-        // } finally {
-        //     var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
-        //     var testPoint = true;
-        // }
+        } catch {
+            var testPoint = true;
+        } finally {
+            var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
+            var testPoint = true;
+        }
 
-        // return null;
+        return null;
     }
 
     /// <summary>
@@ -105,15 +112,15 @@ public static class Titles {
     /// <param name="minSimilar">The minimum similarity coefficient to filter titles (default is 0.1).</param>
     /// <param name="cacheInMin">The cache expiration time in minutes (default is 0).</param>
     /// <returns>A list of title IDs.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static List<long>? GetByValue(string? value, byte listId = 0, int take = 100, float minSimilar = 0.2f, int cacheInMin = 0) {
-        // var dt = DateTime.UtcNow; // for testing
+        var dt = DateTime.UtcNow; // for testing
         
-        // try {
+        try {
             if (string.IsNullOrWhiteSpace(value)) return null;
 
             var cs = new _Cache.Session(value, listId, take, cacheInMin);
-            if(cs.ReturnList is not null) 
-                return cs.ReturnList;
+            if(cs.ReturnList is not null) return cs.ReturnList;
 
             var normalizeTitle = Funcs.GetTitleMetadata(value);
             if (!normalizeTitle.HasValue) return null;
@@ -126,22 +133,22 @@ public static class Titles {
             cs.Set(result);
 
             return result;
-        // } catch {
-        //     var testPoint = true;
-        // } finally {
-        //     var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
-        //     var testPoint = true;
-        // }
+        } catch {
+            var testPoint = true;
+        } finally {
+            var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
+            var testPoint = true;
+        }
 
-        // return null;
+        return null;
     }
 
-    public static long GetHashCode(string title) {
-        var normalizeTitle = Funcs.GetTitleMetadata(title);
-        if (!normalizeTitle.HasValue) return 0;
+    // public static long GetHashCode(string title) {
+    //     var normalizeTitle = Funcs.GetTitleMetadata(title);
+    //     if (!normalizeTitle.HasValue) return 0;
 
-        return normalizeTitle.Value.Key;
-    }
+    //     return normalizeTitle.Value.Key;
+    // }
 
     /// <summary>
     /// Adds a title to an internal list for later analysis, storing metadata and words.
@@ -158,32 +165,55 @@ public static class Titles {
         var normalizeTitle = Funcs.GetTitleMetadata(title);
         if (!normalizeTitle.HasValue) return false;
 
-        long idx = id ?? GetHashCode(title);
+        long idx = id ?? normalizeTitle.Value.Key; //GetHashCode(title);
         var idBox = new TitleKey(searchCategoryId, idx);
 
-        var words = new HashSet<long>();
-        foreach (var word in normalizeTitle.Value.Words) {
-            var f = _Words.TryAdd(word.Key, word.Value);
+        var words = new long[normalizeTitle.Value.Words.Count];
+        int i = 0;
+        foreach (var word in normalizeTitle.Value.Words)
+        {
+            _Words.TryAdd(word.Key, word.Value);
+            
+            var wordEntry = WordsList.GetOrAdd(word.Key, _ => new ConcurrentDictionary<TitleKey, byte>(
+                concurrencyLevel: 1,
+                capacity: SetMaxSimilarTitlesInWord / 2));
 
-            var wordEntry = WordsList.GetOrAdd(word.Key, _ => new ConcurrentDictionary<TitleKey, byte>());
-            //wordEntry[idBox] = 0;
-            wordEntry.TryAdd(idBox, 0);
+            wordEntry[idBox] = 0;
 
-            if (wordEntry.Count > SetMaxSimilarTitlesInWord) {
+            if (wordEntry.Count > SetMaxSimilarTitlesInWord)
+            {
                 var artMinId = wordEntry.MinBy(i => i.Key.Id).Key;
                 wordEntry.TryRemove(artMinId, out _);
             }
 
-            words.Add(word.Key);
+            words[i++] = word.Key;
         }
 
-        return BaseList.TryAdd(idBox, new ReadOnlyMemory<long>(words.ToArray()));
+        return BaseList.TryAdd(idBox, words);
+
+        // var words = new HashSet<long>();
+        // foreach (var word in normalizeTitle.Value.Words) {
+        //     _Words.TryAdd(word.Key, word.Value);
+
+        //     var wordEntry = WordsList.GetOrAdd(word.Key, _ => new ConcurrentDictionary<TitleKey, byte>());
+        //     //wordEntry[idBox] = 0;
+        //     wordEntry.TryAdd(idBox, 0);
+
+        //     if (wordEntry.Count > SetMaxSimilarTitlesInWord) {
+        //         var artMinId = wordEntry.MinBy(i => i.Key.Id).Key;
+        //         wordEntry.TryRemove(artMinId, out _);
+        //     }
+
+        //     words.Add(word.Key);
+        // }
+
+        // return BaseList.TryAdd(idBox, new ReadOnlyMemory<long>(words.ToArray()));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static void CheckAndDeleteOutdateRows() {
         try {
-            if (SetMaxRowNumber <= 0 || BaseList.Count < SetMaxRowNumber)
-                return;
+            if (SetMaxRowNumber <= 0 || BaseList.Count < SetMaxRowNumber) return;
 
             var minKey = BaseList.Min(i => i.Key);
             if (!BaseList.TryRemove(minKey, out _))
@@ -208,7 +238,8 @@ public static class Titles {
     /// <param name="words">A set of word hashes for which to find similar articles.</param>
     /// <param name="listId">The list ID to consider (default is 0).</param>
     /// <returns>A list of similar articles with their similarity coefficients.</returns>
-    static List<KeyValuePair<TitleKey, float>>? GetArticleSimilarList(HashSet<long> words, byte listId) {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static List<KeyValuePair<TitleKey, float>>? GetArticleSimilarList(HashSet<long> words) {
         // var dt = DateTime.UtcNow; // for testing
         
         // try {
@@ -247,8 +278,9 @@ public static class Titles {
     /// <summary>
     /// Retrieves a list of search results based on title IDs and similarity thresholds.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static List<long>? GetSearchListResult(HashSet<long> valueIds, byte listId, int take, float minSimilar) {
-        var matches = GetArticleSimilarList(valueIds, listId);
+        var matches = GetArticleSimilarList(valueIds);
         return matches?.Where(i => i.Value > minSimilar).Take(take).Select(i => i.Key.Id).ToList();
     }
 }

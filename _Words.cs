@@ -1,5 +1,8 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Collections.Frozen;
+using System.Runtime.InteropServices;
+using Microsoft.VisualBasic;
 
 namespace Alga.search;
 /// <summary>
@@ -9,10 +12,12 @@ static class _Words {
     /// <summary>
     /// Represents the basic information about a word, including its hash code and character range.
     /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     readonly struct WordInfo {
         public readonly long HashCode;
         public readonly int StartRange;
         public readonly int EndRange;
+        public readonly FrozenSet<int> Qgrams;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WordInfo"/> struct.
@@ -21,10 +26,11 @@ static class _Words {
         /// <param name="start">The starting character range of the word</param>
         /// <param name="end">The ending character range of the word</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public WordInfo(long hash, int start, int end) {
+        public WordInfo(long hash, int start, int end, FrozenSet<int> qgrams) {
             HashCode = hash;
             StartRange = start;
             EndRange = end;
+            Qgrams = qgrams;
         }
     }
 
@@ -35,7 +41,8 @@ static class _Words {
     /// The key is the word, and the value is the corresponding <see cref="WordInfo"/>.
     /// The average size of each row is approximately 84 bytes.
     /// </remaarks>
-    static readonly ConcurrentDictionary<string, WordInfo> BaseList = new();
+    // static readonly ConcurrentDictionary<string, WordInfo> BaseList = new();
+    static readonly ConcurrentDictionary<string, WordInfo> BaseList = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000); //new(concurrencyLevel: Environment.ProcessorCount, capacity: 1024);
 
     /// <summary>
     /// A dictionary of words' similarities, indexed by the word's hash code.A dictionary of words' similarities, indexed by the word's hash code.
@@ -44,7 +51,7 @@ static class _Words {
     /// The key is the word's hash code, and the value is a dictionary of similar words' hash codes and their similarity coefficients.
     /// The average size of each row is approximately 176 bytes.
     /// </remarks>
-    internal static ConcurrentDictionary<long, ConcurrentDictionary<long, float>> SimilarsList { get; } = new();
+    internal static ConcurrentDictionary<long, ConcurrentDictionary<long, float>> SimilarsList { get; } = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000); //new(concurrencyLevel: Environment.ProcessorCount, capacity: 1024);
 
     /// <summary>
     /// Tries to add a word to the <see cref="BaseList"/> and compute its similarity coefficients.
@@ -63,25 +70,28 @@ static class _Words {
             var wordRange = Funcs.GetWordRange(Line);
             if (wordRange is null) return false;
 
-            var valueModel = new WordInfo(HashCode, wordRange.Value.Start, wordRange.Value.End);
+            var qGmams = Funcs.GetQGramHashes(Line, 2);
+
+            var valueModel = new WordInfo(HashCode, wordRange.Value.Start, wordRange.Value.End, qGmams);
 
             if (!BaseList.TryAdd(Line, valueModel)) return false;
 
-            var siml = GetMatchCoefficientList(Line, valueModel.StartRange, valueModel.EndRange);
+            if(Line.Length > 2) {
+                var siml = GetMatchCoefficientList(Line, valueModel);
 
-            if(siml?.Count > 0) {
-                SimilarsList.TryAdd(HashCode, siml);
+                if(siml?.Count > 0) {
+                    SimilarsList.TryAdd(HashCode, siml);
 
-                foreach (var pair in siml) {
-                    SimilarsList.AddOrUpdate(
-                        pair.Key,
-                        _ => new ConcurrentDictionary<long, float>(new[] { new KeyValuePair<long, float>(HashCode, pair.Value) }),
-                        (_, existingDict) =>
-                        {
-                            existingDict.TryAdd(HashCode, pair.Value);
-                            return existingDict;
-                        }
-                    );
+                    foreach (var pair in siml) {
+                        SimilarsList.AddOrUpdate(
+                            pair.Key,
+                            _ => new ConcurrentDictionary<long, float>(new[] { new KeyValuePair<long, float>(HashCode, pair.Value) }),
+                            (_, existingDict) => {
+                                existingDict.TryAdd(HashCode, pair.Value);
+                                return existingDict;
+                            }
+                        );
+                    }
                 }
             }
 
@@ -106,27 +116,69 @@ static class _Words {
     /// <returns>
     /// A dictionary where the key is the hash code of the similar word, and the value is the similarity coefficient.
     /// </returns>
+
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // static ConcurrentDictionary<long, float> GetMatchCoefficientList(ReadOnlySpan<char> line, WordInfo wInfo) {
+    //         float minCoefficient = line.Length switch { < 3 => 1f, < 4 => 0.65f, < 5 => 0.6f, < 6 => 0.55f, _ => 0.5f };
+            
+    //         var similarityDict = new ConcurrentDictionary<long, float>();
+
+    //         var partitioner = Partitioner.Create(BaseList);
+    //         //var partitioner = Partitioner.Create(BaseList, EnumerablePartitionerOptions.NoBuffering);
+
+    //         Parallel.ForEach(partitioner, word => {
+    //             if (word.Value.EndRange < wInfo.StartRange || word.Value.StartRange > wInfo.EndRange) return;
+
+    //             var coefficient = Funcs.CompareStringsMinHash(wInfo.Qgrams, word.Value.Qgrams);
+    //             if (coefficient >= minCoefficient && coefficient < 1)
+    //                 similarityDict[word.Value.HashCode] = coefficient;
+    //         });
+
+    //         return similarityDict;
+    // }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static ConcurrentDictionary<long, float>? GetMatchCoefficientList(string line, int startRange, int endRange)
-    {
+    static ConcurrentDictionary<long, float> GetMatchCoefficientList(ReadOnlySpan<char> line, WordInfo wInfo) {
+        float minCoefficient = line.Length switch { < 3 => 1f, < 4 => 0.65f, < 5 => 0.6f, < 6 => 0.55f, _ => 0.5f };
+
         var similarityDict = new ConcurrentDictionary<long, float>();
+        var partitioner = Partitioner.Create(BaseList);
 
-        var minCoefficient = line.Length switch { < 3 => 1, < 4 => 0.65, < 5 => 0.74f, < 6 => 0.65f, _ => 0.6f };
+        Parallel.ForEach(partitioner, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, word => {
+            if (word.Value.EndRange < wInfo.StartRange || word.Value.StartRange > wInfo.EndRange) return;
 
-        BaseList.AsParallel().ForAll(word => {
-            var wordInfo = word.Value; // Создаем копию структуры (избегаем ref)
-
-            if (wordInfo.EndRange < startRange || wordInfo.StartRange > endRange) return;
-
-            var matchString = Funcs.CompareStrings.GetMaximumMatchString(line, word.Key);
-            if (matchString.IsEmpty) return;
-
-            float coefficient = Funcs.CompareStrings.GetMatchCoefficient(matchString.Length, line.Length, word.Key.Length);
-            if (coefficient < minCoefficient || coefficient >= 1) return;
-
-            similarityDict.TryAdd(wordInfo.HashCode, coefficient);
+            float coefficient = Funcs.CompareStringsMinHash(wInfo.Qgrams, word.Value.Qgrams);
+            if (coefficient >= minCoefficient && coefficient < 1)
+                similarityDict.TryAdd(word.Value.HashCode, coefficient); // TryAdd → избежать перезаписи
         });
 
         return similarityDict;
     }
+
+
+    // static ConcurrentDictionary<long, float>? GetMatchCoefficientListByLCS(string line, int startRange, int endRange)
+    // {
+    //     var similarityDict = new ConcurrentDictionary<long, float>();
+
+    //     var minCoefficient = line.Length switch { < 3 => 1, < 4 => 0.65, < 5 => 0.74f, < 6 => 0.65f, _ => 0.6f };
+
+    //     var lineLenDouble = line.Length*2;
+    //     var lineLenD = line.Length/2;
+
+    //     BaseList.AsParallel().ForAll(word => {
+    //         var wordInfo = word.Value; // Создаем копию структуры (избегаем ref)
+
+    //         if (wordInfo.EndRange < startRange || wordInfo.StartRange > endRange || word.Key.Length > lineLenDouble || word.Key.Length < lineLenD) return;
+
+    //         var matchString = Funcs.CompareStrings.GetMaximumMatchString(line, word.Key);
+    //         if (matchString.IsEmpty) return;
+
+    //         float coefficient = Funcs.CompareStrings.GetMatchCoefficient(matchString.Length, line.Length, word.Key.Length);
+    //         if (coefficient < minCoefficient || coefficient >= 1) return;
+
+    //         similarityDict.TryAdd(wordInfo.HashCode, coefficient);
+    //     });
+
+    //     return similarityDict;
+    // }
 }

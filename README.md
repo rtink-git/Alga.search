@@ -7,10 +7,9 @@
 
 
  ## How does this work?
-
- - 1. You send to nuget package a list(s) of titles (strings). Add to the lists as needed.
- - 2. The library (NuGet package) analyzes incoming titles (strings) during addition and stores only the data needed for fast search in the future.
- - 3. The search is ready for use. 
+ 1. You send to nuget package a list(s) of titles (strings). Add to the lists as needed.
+ 2. The library (NuGet package) analyzes incoming titles (strings) during addition and stores only the data needed for fast search in the future.
+ 3. The search is ready for use. 
 
 
 
@@ -22,7 +21,7 @@
 
 2. Add [Alga.search](https://www.nuget.org/packages/Alga.search) nuget package
 
-4. You send a list which will be searched. 
+3. You send a list which will be searched. 
 
 - We analyze them and save only the necessary information about them in memory. 
 - Library use thread-safe lists, so you can add data to them from different threads in parallel. 
@@ -40,13 +39,13 @@ Parallel.ForEach(ArticlesFromDb, article => {
 
 BENCHMARK:
 
- - 1 loop + 10000 titles (to 0 title / comparison with 0 rows)          : 99 / 99 / 91 / 92 / 84 / 83 / 90 / 93 / 93 sec
- - 2 loop + 10000 titles (to 10000 title / comparison with 10000 rows)  : 170 / 152 / 154 / 154 / 147 / 196 sec
- - 3 loop + 10000 titles (to 20000 title / comparison with 20000 rows)  : 226 / 223 / 236 / 233 sec
- - 4 loop + 10000 titles (to 30000 title / comparison with 30000 rows)  : 240 sec
- - 5 loop + 10000 titles (to 40000 title / comparison with 40000 rows)  : 245 sec
+ - 1 loop + 10000 titles (to 0 title / comparison with 0 rows)          : v2.2.0: 55 / 67 / 80 / 59 / 50 sec (minHash)          v2.0.0: 99 / 91 / 92 (LCS) sec
+ - 2 loop + 10000 titles (to 10000 title / comparison with 10000 rows)  : v2.2.0: 95 / 104 / 132 / 99 / 96 / 94 sec (minHash)   v2.0.0: 154 / 147 / 191 (LCS) sec
+ - 3 loop + 10000 titles (to 20000 title / comparison with 20000 rows)  : v2.2.0: 110 / 115 / 170 / 132 / 105 sec (minHash)     v2.0.0: 223 / 236 / 233 (LCS) sec
+ - 4 loop + 10000 titles (to 30000 title / comparison with 30000 rows)  : v2.2.0: 138 / 150 / 153 / 160 / 128 sec (minHash)     v2.0.0: 295 / 240 (LCS) sec
+ - 5 loop + 10000 titles (to 40000 title / comparison with 40000 rows)  : v2.2.0: 150 / 176 / 164 / 149 / 133 sec (minHash)     v2.0.0: 245 (LCS) sec
 
-5. Поиск по уникальному идентификатору. Полезен в проектах, когда необходимо найти похожие на этот заголовок заголовки (похожие публикации по названию - в сми)
+4. Поиск по уникальному идентификатору. Полезен в проектах, когда необходимо найти похожие на этот заголовок заголовки (похожие публикации по названию - в сми)
 
 ```
 var l = Alga.search.Titles.GetById(123); // where 123 is title id
@@ -60,28 +59,27 @@ var l = Alga.search.Titles.GetById(123, 1, 5, 0.3f); // where 0.3f is min simila
 var l = Alga.search.Titles.GetById(123, 1, 5, 0.4f, 10); // where 5 is the number of minutes to cache for
 ```
 
-BENCHMARK: 0.46 / 0.77 / 0.14 / 0.81 / 1.15 / 0.40 / 18.33 ms 
+BENCHMARK: 0.15 / 0.27 / 0.80 / 0.10 / 0.57 / 1.00 / 0.46 / 0.77 / 0.14 ms 
 
-6. Поиск по строке или части строки. - класссический поиск по словам. Мы сравниваем слова поиска со словами которые есть в ваших заголовках, и выдаем результат списка id с коэфицентом схожести ваших заголовков с поисковым запросом.
+5. Поиск по строке или части строки. - класссический поиск по словам. Мы сравниваем слова поиска со словами которые есть в ваших заголовках, и выдаем результат списка id с коэфицентом схожести ваших заголовков с поисковым запросом.
 
 ```
-var l = Alga.search.Titles.GetById("search query", 0, 30, 0.2f, 15); // where 123 is title id
+var l = Alga.search.Titles.GetById("search query", 0, 30, 0.2f, 15);
 ```
 
 BENCHMARK:
 
-- 1 words in the search query, where 1 existing (in the list) word: 0.15 (0.022) / 0.30 (0.010) / 0.20 (0.009) / 0.40 (0.015) / 0.89 (0.020) ms
-- 2 words in the search query, where 1 existing (in the list) word: 0.32 (0.008) / 0.14 (0.011) / 0.09 (0.009) / 0.15 (0.015) / 0.74 (0.016) ms
-- 3 words in the search query, where 1 existing (in the list) word: 1.61 (0.008) / 1.79 (0.008) / 0.50 (0.006) / 1.18 (0.010) / 0.25 (0.009) ms
-- 4 words in the search query, where 1 existing (in the list) word: 0.27 (0.008) / 0.17 (0.008) / 0.44 (0.008) / 0.32 (0.022) / 4.43 (0.007) ms
-- 5 words in the search query, where 1 existing (in the list) word:
+- 1 words in the search query, where 1 existing (in the list) word: 0.22 / 0.25 / 0.37 / 0.23 ms
+- 2 words in the search query, where 2 existing (in the list) word: 0.23 / 0.50 / 0.15 / 0.25 ms
+- 3 words in the search query, where 3 existing (in the list) word: 0.50 / 0.40 / 0.30 / 1.61 ms
+- 4 words in the search query, where 4 existing (in the list) word: 0.70 / 1.50 / 2.00 / 1.00 ms
+- 5 words in the search query, where 5 existing (in the list) word: 1.20 / 0.70 / 0.45 / 0.40 ms
 
-- 1 words in the search query, where 1 is not existing (in the list) word: 26.725 (0.016) / 185.49 (0.026) / 13.152 (0.073) / 9.8300 (0.372) ms
-- 2 words in the search query, where 1 is not existing (in the list) word: 45.914 (0.019) / 96.812 (0.026) / 25.994 (0.207) / 17.587 (0.020)
-- 3 words in the search query, where 2 is not existing (in the list) word: 175.67 / 268.28 / 232.19 / 133.49
-- 4 words in the search query, where 2 is not existing (in the list) word: 232.04 / 93.937 / 217.33 / 236.27
-- 5 words in the search query, where 4 is not existing (in the list) word: 462.27 / 338.75 / 298.32 / 541.93
-- 5 words in the search query, where 2 is not existing (in the list) word: 318.90 / 286.28
+- 1 words in the search query, where 1 is not existing (in the list) word: 41.00 / 45.00 / 64.00 ms
+- 2 words in the search query, where 2 is not existing (in the list) word: 91.00 / 79.00 / 79.91 ms
+- 3 words in the search query, where 3 is not existing (in the list) word: 210.0 / 202.0 / 175.6 ms
+- 4 words in the search query, where 4 is not existing (in the list) word: 335.0 / 320.0 / 298.0 ms
+- 5 words in the search query, where 5 is not existing (in the list) word: 225.0 / 270.0 / 462.2 ms
 
 
 
@@ -97,11 +95,6 @@ Computer used for BENCHMARK: Computer for testing: MacBook Pro. 2,8 GHz 4‑core
 
 ### UPDATES
 
-What has been changed in new version (2.0.0) compared to the previous version (1.0.1)
+What has been changed in new version (2.2.0) compared to the previous version (2.0.0)
 
- - Completely refactored the code.
- - Memory usage optimized.
- - Removed external lists; now using only internal ones.
- - Added logic to reduce the risk of memory overflow.
- - Removed the need for background code, considering it redundant for now.
- - Added settings for caching search results
+ - Word comprassion aalgorithm was changed from LCS to MinHash. Line adding speed increaseed by 40%
