@@ -18,7 +18,7 @@ public static class Titles {
     /// Represents a unique identifier for a title, combining a list ID and a title ID.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    readonly struct TitleKey : IEquatable<TitleKey> {
+    readonly struct TitleKey {
         public byte ListId { get; }
         public long Id { get; }
 
@@ -32,27 +32,6 @@ public static class Titles {
             ListId = listId;
             Id = id;
         }
-
-        /// <summary>
-        /// Gets the hash code of the TitleKey.
-        /// </summary>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => HashCode.Combine(ListId, Id);
-        /// <summary>
-        /// Determines whether the specified object is equal to the current TitleKey.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? obj) => obj is TitleKey other && Equals(other);
-        /// <summary>
-        /// Determines whether the current TitleKey is equal to another TitleKey.
-        /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(TitleKey other) => ListId == other.ListId && Id == other.Id;
     }
 
     /// <summary>

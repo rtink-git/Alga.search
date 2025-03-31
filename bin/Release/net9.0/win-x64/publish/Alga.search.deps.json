@@ -7,7 +7,7 @@
   "targets": {
     ".NETCoreApp,Version=v9.0": {},
     ".NETCoreApp,Version=v9.0/win-x64": {
-      "Alga.search/2.0.0": {
+      "Alga.search/2.2.0": {
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "9.0.3",
           "Microsoft.Extensions.Logging": "9.0.0"
@@ -108,7 +108,7 @@
     }
   },
   "libraries": {
-    "Alga.search/2.0.0": {
+    "Alga.search/2.2.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

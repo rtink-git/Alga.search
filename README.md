@@ -39,11 +39,11 @@ Parallel.ForEach(ArticlesFromDb, article => {
 
 BENCHMARK:
 
- - 1 loop + 10000 titles (to 0 title / comparison with 0 rows)          : v2.2.0: 55 / 67 / 80 / 59 / 50 sec (minHash)          v2.0.0: 99 / 91 / 92 (LCS) sec
- - 2 loop + 10000 titles (to 10000 title / comparison with 10000 rows)  : v2.2.0: 95 / 104 / 132 / 99 / 96 / 94 sec (minHash)   v2.0.0: 154 / 147 / 191 (LCS) sec
- - 3 loop + 10000 titles (to 20000 title / comparison with 20000 rows)  : v2.2.0: 110 / 115 / 170 / 132 / 105 sec (minHash)     v2.0.0: 223 / 236 / 233 (LCS) sec
- - 4 loop + 10000 titles (to 30000 title / comparison with 30000 rows)  : v2.2.0: 138 / 150 / 153 / 160 / 128 sec (minHash)     v2.0.0: 295 / 240 (LCS) sec
- - 5 loop + 10000 titles (to 40000 title / comparison with 40000 rows)  : v2.2.0: 150 / 176 / 164 / 149 / 133 sec (minHash)     v2.0.0: 245 (LCS) sec
+ - 1 loop + 10000 titles (to 0 title / comparison with 0 rows)          : v2.2.0: 46 / 59 / 46 / 55 / 67 / 80 / 59 sec (minHash)          v2.0.0: 99 / 91 / 92 (LCS) sec
+ - 2 loop + 10000 titles (to 10000 title / comparison with 10000 rows)  : v2.2.0: 95 / 130 / 97 / 95 / 104 / 132 sec (minHash)   v2.0.0: 154 / 147 / 191 (LCS) sec
+ - 3 loop + 10000 titles (to 20000 title / comparison with 20000 rows)  : v2.2.0: 119 / 125 / 110 / 115 / 170 / 132 sec (minHash)     v2.0.0: 223 / 236 / 233 (LCS) sec
+ - 4 loop + 10000 titles (to 30000 title / comparison with 30000 rows)  : v2.2.0: 134 / 138 / 150 / 153 / 160 / 128 sec (minHash)     v2.0.0: 295 / 240 (LCS) sec
+ - 5 loop + 10000 titles (to 40000 title / comparison with 40000 rows)  : v2.2.0: 157 / 150 / 176 / 164 / 149 / 133 sec (minHash)     v2.0.0: 245 (LCS) sec
 
 4. Поиск по уникальному идентификатору. Полезен в проектах, когда необходимо найти похожие на этот заголовок заголовки (похожие публикации по названию - в сми)
 
@@ -95,6 +95,6 @@ Computer used for BENCHMARK: Computer for testing: MacBook Pro. 2,8 GHz 4‑core
 
 ### UPDATES
 
-What has been changed in new version (2.2.0) compared to the previous version (2.0.0)
+What has been changed in new version (2.2.2) compared to the previous version (2.2.0)
 
- - Word comprassion aalgorithm was changed from LCS to MinHash. Line adding speed increaseed by 40%
+ - Remove unnecessary code

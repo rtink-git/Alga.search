@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Alga.search</PackageId>
-    <Version>2.2.0</Version>
+    <Version>2.2.2</Version>
     <Author>rtink.git@gmail.com</Author>
     <Product>Alga.search</Product>
     <PackageReadmeFile>README.md</PackageReadmeFile>
