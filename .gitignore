@@ -1,0 +1,60 @@
+## Сборочные каталоги
+bin/
+obj/
+out/
+
+## Папки Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Конфигурации
+*.dll
+*.exe
+*.pdb
+*.cache
+*.mdb
+*.log
+
+## Файлы тестов и покрытия
+TestResults/
+*.coverage
+*.coveragexml
+*.log
+
+## Файлы временных пакетов NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+.nuget/
+project.lock.json
+project.assets.json
+PackageArtifacts/
+
+## Папка результатов публикации
+publish/
+*.publish.xml
+
+## Бэкапы и временные файлы
+*.tmp
+*.bak
+*.old
+*.orig
+
+## Кэш Rider/Resharper
+.idea/
+*.DotSettings.user
+_ReSharper*/
+resharper-host/
+
+## OS-specific
+.DS_Store
+Thumbs.db
+
+## Secrets или user-specific
+secrets.json
+appsettings.Development.json

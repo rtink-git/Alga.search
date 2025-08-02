@@ -39,47 +39,39 @@ Parallel.ForEach(ArticlesFromDb, article => {
 
 BENCHMARK:
 
- - 1 loop + 10000 titles (to 0 title / comparison with 0 rows)          : v2.2.0: 46 / 59 / 46 / 55 / 67 / 80 / 59 sec (minHash)          v2.0.0: 99 / 91 / 92 (LCS) sec
- - 2 loop + 10000 titles (to 10000 title / comparison with 10000 rows)  : v2.2.0: 95 / 130 / 97 / 95 / 104 / 132 sec (minHash)   v2.0.0: 154 / 147 / 191 (LCS) sec
- - 3 loop + 10000 titles (to 20000 title / comparison with 20000 rows)  : v2.2.0: 119 / 125 / 110 / 115 / 170 / 132 sec (minHash)     v2.0.0: 223 / 236 / 233 (LCS) sec
- - 4 loop + 10000 titles (to 30000 title / comparison with 30000 rows)  : v2.2.0: 134 / 138 / 150 / 153 / 160 / 128 sec (minHash)     v2.0.0: 295 / 240 (LCS) sec
- - 5 loop + 10000 titles (to 40000 title / comparison with 40000 rows)  : v2.2.0: 157 / 150 / 176 / 164 / 149 / 133 sec (minHash)     v2.0.0: 245 (LCS) sec
+ - 1 loop + 10000 titles (to 0 title / comparison with 0 rows)          : v2.3.0: 18 sec    v2.2.0: 46 (minHash)            v2.0.0: 99 (LCS) sec
+ - 2 loop + 10000 titles (to 10000 title / comparison with 10000 rows)  : v2.3.0: 26 sec    v2.2.0: 95 sec (minHash)        v2.0.0: 154 (LCS) sec
+ - 3 loop + 10000 titles (to 20000 title / comparison with 20000 rows)  : v2.3.0:           v2.2.0: 119 sec (minHash)       v2.0.0: 223 (LCS) sec
+ - 4 loop + 10000 titles (to 30000 title / comparison with 30000 rows)  : v2.3.0:           v2.2.0: 134 (minHash)           v2.0.0: 295 (LCS) sec
+ - 5 loop + 10000 titles (to 40000 title / comparison with 40000 rows)  : v2.3.0:           v2.2.0: 157 sec (minHash)       v2.0.0: 245 (LCS) sec
 
-4. Поиск по уникальному идентификатору. Полезен в проектах, когда необходимо найти похожие на этот заголовок заголовки (похожие публикации по названию - в сми)
-
-```
-var l = Alga.search.Titles.GetById(123); // where 123 is title id
-
-var l = Alga.search.Titles.GetById(123, 1); // where 1 is list id,
-
-var l = Alga.search.Titles.GetById(123, 1, 5); // where 5 is the number to return
-
-var l = Alga.search.Titles.GetById(123, 1, 5, 0.3f); // where 0.3f is min similar coefficent
-
-var l = Alga.search.Titles.GetById(123, 1, 5, 0.4f, 10); // where 5 is the number of minutes to cache for
-```
-
-BENCHMARK: 0.15 / 0.27 / 0.80 / 0.10 / 0.57 / 1.00 / 0.46 / 0.77 / 0.14 ms 
-
-5. Поиск по строке или части строки. - класссический поиск по словам. Мы сравниваем слова поиска со словами которые есть в ваших заголовках, и выдаем результат списка id с коэфицентом схожести ваших заголовков с поисковым запросом.
+4. Search by unique identifier. Useful in projects where it is necessary to find titles similar to a given one (e.g., related articles by title in media publications).
 
 ```
-var l = Alga.search.Titles.GetById("search query", 0, 30, 0.2f, 15);
+var l = Alga.search.Titles.SeaarchSimilarTitlesById(123); // where 123 is title id
+
+var l = Alga.search.Titles.GetSimilarTitlesById(123, 5); // where 1 is list id,
+
+var l = Alga.search.Titles.GetSimilarTitlesById(123, 5, 0.3f); // where 0.3f is min similar coefficent
+
+```
+
+BENCHMARK: 0.018 / 0.025 / 0.061 / 0.034 / 0.019 / 0.15 ms 
+
+5. Search by full or partial string – a classic word-based search. We compare the search words with the words present in your titles and return a list of IDs with a similarity coefficient indicating how closely your titles match the search query.
+
+```
+var l = Alga.search.Titles.SearchByString("search query", 30, 0.2f);
 ```
 
 BENCHMARK:
 
-- 1 words in the search query, where 1 existing (in the list) word: 0.22 / 0.25 / 0.37 / 0.23 ms
-- 2 words in the search query, where 2 existing (in the list) word: 0.23 / 0.50 / 0.15 / 0.25 ms
-- 3 words in the search query, where 3 existing (in the list) word: 0.50 / 0.40 / 0.30 / 1.61 ms
-- 4 words in the search query, where 4 existing (in the list) word: 0.70 / 1.50 / 2.00 / 1.00 ms
-- 5 words in the search query, where 5 existing (in the list) word: 1.20 / 0.70 / 0.45 / 0.40 ms
+- 1 words in the search query, where 1 word: 1.6 ms
+- 2 words in the search query, where 2 word: 1.3 ms
+- 3 words in the search query, where 3 word: 3.0 ms
+- 4 words in the search query, where 4 word: 3.4 ms
+- 5 words in the search query, where 5 word: 3.2 ms
 
-- 1 words in the search query, where 1 is not existing (in the list) word: 41.00 / 45.00 / 64.00 ms
-- 2 words in the search query, where 2 is not existing (in the list) word: 91.00 / 79.00 / 79.91 ms
-- 3 words in the search query, where 3 is not existing (in the list) word: 210.0 / 202.0 / 175.6 ms
-- 4 words in the search query, where 4 is not existing (in the list) word: 335.0 / 320.0 / 298.0 ms
-- 5 words in the search query, where 5 is not existing (in the list) word: 225.0 / 270.0 / 462.2 ms
 
 
 
@@ -95,6 +87,8 @@ Computer used for BENCHMARK: Computer for testing: MacBook Pro. 2,8 GHz 4‑core
 
 ### UPDATES
 
-What has been changed in new version (2.2.2) compared to the previous version (2.2.0)
+What has been changed in new version (2.3.0) compared to the previous version (2.2.2)
 
- - Remove unnecessary code
+ - Consumes less RAM memory
+ - Speeded up the preliminary preparation of headings for subsequent search
+ - Speeded up search queries

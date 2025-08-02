@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
 namespace Alga.search;
-internal static partial class Funcs {
+public static partial class Funcs {
     public static class CompareStrings {
         /// <summary>
         /// Compare two strings, looks for a match not only from the beginning of the string
