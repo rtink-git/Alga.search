@@ -1,5 +1,4 @@
 using System.Collections.Frozen;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Alga.search;
@@ -8,7 +7,7 @@ namespace Alga.search;
 /// </summary>
 public static class Titles
 {
-    private static bool isDirty = false;
+    private static volatile int _isDirty;
     public static int SetMaxSimilarTitlesInWord { get; set; } = 1000;
 
     /// <summary>
@@ -27,28 +26,23 @@ public static class Titles
     /// <remarks>
     /// This method uses stack-allocated memory for small buffers to minimize allocations and improve performance.
     /// </remarks>
-    public static List<(long Id, float Coeff)>? SearchSimilarTitlesById(long id, int take = 128, float minSimilar = 0.2f)
+    public static List<(Guid Id, float Coeff)>? SearchSimilarTitlesById(Guid id, int take = 128, float minSimilar = 0.2f)
     {
-        if (isDirty)
-        {
-            UpdateWordToTitlesAsFrozen();
-            UpdateTitlesWordMapAsFrozen();
-        }
+        EnsureFrozen();
 
         if (!Collections.TitlesWordMapAsFrozen.TryGetValue(id, out var words)) return null;
 
-        var allKeys = new List<long>(words.Length * 500);
+        var allKeys = new List<Guid>(words.Length * 500);
         foreach (var word in words)
         {
             if (Collections.WordToTitlesMapAsFrozen.TryGetValue(word, out var articles) && articles != null)
-                try { allKeys.AddRange(articles); } catch { }
-
+                allKeys.AddRange(articles);
         }
 
         int wordCount = words.Length;
         int minRequiredMatches = (int)MathF.Ceiling(minSimilar * wordCount);
 
-        var matchCounts = new Dictionary<long, int>(allKeys.Count / 2);
+        var matchCounts = new Dictionary<Guid, int>(allKeys.Count / 2);
         foreach (var key in allKeys)
         {
             ref int count = ref CollectionsMarshal.GetValueRefOrAddDefault(matchCounts, key, out _);
@@ -56,9 +50,9 @@ public static class Titles
         }
 
         int maxBuffer = Math.Min(take * 2, 512);
-        Span<(long, float)> buffer = maxBuffer <= 128
-            ? stackalloc (long, float)[maxBuffer]
-            : new (long, float)[maxBuffer]; // fallback to heap if needed
+        Span<(Guid, float)> buffer = maxBuffer <= 128
+            ? stackalloc (Guid, float)[maxBuffer]
+            : new (Guid, float)[maxBuffer]; // fallback to heap if needed
 
         int written = 0;
         foreach (var kvp in matchCounts)
@@ -76,7 +70,7 @@ public static class Titles
         var slice = buffer.Slice(0, written);
         slice.Sort((a, b) => b.Item2.CompareTo(a.Item2));
 
-        var result = new List<(long, float)>(Math.Min(take, written));
+        var result = new List<(Guid, float)>(Math.Min(take, written));
         for (int i = 0; i < slice.Length && result.Count < take; i++)
             result.Add(slice[i]);
 
@@ -84,25 +78,24 @@ public static class Titles
     }
 
 
-    public static List<(long Id, float Coeff)>? SearchByString(string value, int take = 128, float minSimilar = 0.2f)
+    public static List<(Guid Id, float Coeff)>? SearchByString(string value, int take = 128, float minSimilar = 0.2f)
     {
-        if (isDirty)
-            UpdateTitlesWordMapAsFrozen();
+        EnsureFrozen();
 
         var normalizeTitle = Funcs.GetTitleMetadata(value);
         if (normalizeTitle == null || normalizeTitle.Count == 0) return null;
 
-        var allKeys = new List<long>(normalizeTitle.Keys.Count * 500);
+        var allKeys = new List<Guid>(normalizeTitle.Keys.Count * 500);
         foreach (var word in normalizeTitle.Keys)
         {
-            if (Collections.TitlesWordMapAsFrozen.TryGetValue(word, out var articles) && articles != null)
+            if (Collections.WordToTitlesMapAsFrozen.TryGetValue(word, out var articles) && articles != null)
                 try { allKeys.AddRange(articles); } catch { }
         }
 
         int wordCount = normalizeTitle.Keys.Count;
         int minRequiredMatches = (int)MathF.Ceiling(minSimilar * wordCount);
 
-        var matchCounts = new Dictionary<long, int>(allKeys.Count / 2);
+        var matchCounts = new Dictionary<Guid, int>(allKeys.Count / 2);
         foreach (var key in allKeys)
         {
             ref int count = ref CollectionsMarshal.GetValueRefOrAddDefault(matchCounts, key, out _);
@@ -110,9 +103,9 @@ public static class Titles
         }
 
         int maxBuffer = Math.Min(take * 2, 512);
-        Span<(long, float)> buffer = maxBuffer <= 128
-            ? stackalloc (long, float)[maxBuffer]
-            : new (long, float)[maxBuffer]; // fallback to heap if needed
+        Span<(Guid, float)> buffer = maxBuffer <= 128
+            ? stackalloc (Guid, float)[maxBuffer]
+            : new (Guid, float)[maxBuffer]; // fallback to heap if needed
 
         int written = 0;
         foreach (var kvp in matchCounts)
@@ -130,7 +123,7 @@ public static class Titles
         var slice = buffer.Slice(0, written);
         slice.Sort((a, b) => b.Item2.CompareTo(a.Item2));
 
-        var result = new List<(long, float)>(Math.Min(take, written));
+        var result = new List<(Guid, float)>(Math.Min(take, written));
         for (int i = 0; i < slice.Length && result.Count < take; i++)
             result.Add(slice[i]);
 
@@ -144,12 +137,12 @@ public static class Titles
     /// <param name="title">The title string to add.</param>
     /// <param name="id">An optional unique identifier for the title.</param>
     /// <returns>True if the title was added successfully; otherwise, false.</returns>
-    public static bool TryAdd(string title, long? id = null)
+    public static bool TryAdd(string title, Guid? id = null)
     {
         var normalizeTitle = Funcs.GetTitleMetadata(title);
         if (normalizeTitle == null || normalizeTitle.Count == 0) return false;
 
-        long idx = id ?? Funcs.GetHashCode64(title);
+        var idx = id ?? Funcs.GetDeterministicGuidFromString(title);
 
         var words = new long[normalizeTitle.Count];
         int i = 0;
@@ -157,12 +150,12 @@ public static class Titles
         {
             Words.TryAdd(word.Key, word.Value);
 
-            var wordEntry = Collections.WordToTitlesMap.GetOrAdd(word.Key, _ => new HashSet<long>());
+            var wordEntry = Collections.WordToTitlesMap.GetOrAdd(word.Key, _ => new HashSet<Guid>());
 
             lock (wordEntry)
                 if (wordEntry.Add(idx) && wordEntry.Count > SetMaxSimilarTitlesInWord)
                 {
-                    var minId = wordEntry.Min(); // Самый старый
+                    var minId = wordEntry.Min();
                     if (minId != idx) wordEntry.Remove(minId);
                 }
 
@@ -171,24 +164,27 @@ public static class Titles
 
         var added = Collections.TitlesWordMap.TryAdd(idx, words);
 
-        if (added) isDirty = true;
+        if (added) Interlocked.Exchange(ref _isDirty, 1);
 
         return added;
     }
 
-    public static void UpdateTitlesWordMapAsFrozen()
+    private static void EnsureFrozen()
     {
-        Collections.TitlesWordMapAsFrozen = Collections.TitlesWordMap.ToFrozenDictionary();
-        isDirty = false;
+        if (Interlocked.Exchange(ref _isDirty, 0) == 1)
+        {
+            UpdateWordToTitlesAsFrozen();
+            UpdateTitlesWordMapAsFrozen();
+        }
     }
 
-    internal static void UpdateWordToTitlesAsFrozen()
+    private static void UpdateTitlesWordMapAsFrozen() => Collections.TitlesWordMapAsFrozen = Collections.TitlesWordMap.ToFrozenDictionary();
+
+    private static void UpdateWordToTitlesAsFrozen()
     {
         var snapshot = Collections.WordToTitlesMap.ToArray();
 
-        var frozen = snapshot.ToFrozenDictionary(
-            kv => kv.Key,
-            kv => { lock (kv.Value) return kv.Value.ToFrozenSet(); });
+        var frozen = snapshot.ToFrozenDictionary(kv => kv.Key, kv => { lock (kv.Value) return kv.Value.ToArray(); });
 
         Collections.WordToTitlesMapAsFrozen = frozen;
     }

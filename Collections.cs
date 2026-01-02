@@ -28,8 +28,8 @@ public class Collections
     /// Value: A thread-safe set of title IDs (ConcurrentDictionary<long, byte>) representing all titles containing the word.Value: A thread-safe set of title IDs (ConcurrentDictionary<long, byte>) representing all titles containing the word.
     /// Average memory size for 100,000 rows (& 1000 in HashSet): 1.3 GB
     /// </summary>
-    internal static readonly ConcurrentDictionary<long, HashSet<long>> WordToTitlesMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
-    internal static FrozenDictionary<long, FrozenSet<long>> WordToTitlesMapAsFrozen = FrozenDictionary<long, FrozenSet<long>>.Empty;
+    internal static readonly ConcurrentDictionary<long, HashSet<Guid>> WordToTitlesMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
+    internal static FrozenDictionary<long, Guid[]> WordToTitlesMapAsFrozen = FrozenDictionary<long, Guid[]>.Empty;
 
 
     /// <summary>
@@ -38,7 +38,7 @@ public class Collections
     /// Value: FrozenSet of word IDs (long), representing the distinct words extracted from the title.
     /// Average memory size for 100,000 rows: 17 MB.
     /// </summary>
-    internal static readonly ConcurrentDictionary<long, long[]> TitlesWordMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
+    internal static readonly ConcurrentDictionary<Guid, long[]> TitlesWordMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
 
-    internal static FrozenDictionary<long, long[]> TitlesWordMapAsFrozen = FrozenDictionary<long, long[]>.Empty;
+    internal static FrozenDictionary<Guid, long[]> TitlesWordMapAsFrozen = FrozenDictionary<Guid, long[]>.Empty;
 }
