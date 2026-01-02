@@ -32,8 +32,9 @@ public static class Titles
         var allKeys = new List<long>(words.Length * 500);
         foreach (var word in words)
         {
-            if (Collections.WordToTitlesMap.TryGetValue(word, out var articles))
-                allKeys.AddRange(articles);
+            if (Collections.WordToTitlesMap.TryGetValue(word, out var articles) && articles != null)
+                try { allKeys.AddRange(articles); } catch { }
+                
         }
 
         int wordCount = words.Length;
@@ -83,8 +84,8 @@ public static class Titles
         var allKeys = new List<long>(normalizeTitle.Keys.Count * 500);
         foreach (var word in normalizeTitle.Keys)
         {
-            if (Collections.WordToTitlesMap.TryGetValue(word, out var articles))
-                allKeys.AddRange(articles);
+            if (Collections.WordToTitlesMap.TryGetValue(word, out var articles) && articles != null)
+                try { allKeys.AddRange(articles); } catch { }
         }
 
         int wordCount = normalizeTitle.Keys.Count;
