@@ -2,15 +2,19 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Alga.search;
-public static partial class Funcs {
+
+internal static partial class Funcs
+{
     /// <summary>
     /// Computes a 64-bit hash code for the provided input string using a custom hash function.
     /// </summary>
     /// <param name="value">The input string represented as a ReadOnlySpan</param>
     /// <returns>A 64-bit long value representing the hash code of the input string</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long GetHashCode64(ReadOnlySpan<char> span) {
-        unchecked {
+    public static long GetHashCode64(ReadOnlySpan<char> span)
+    {
+        unchecked
+        {
             long hash = 5381 + span.Length;
             ref char start = ref MemoryMarshal.GetReference(span);
 

@@ -1,9 +1,8 @@
-using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 
 namespace Alga.search;
 
-public static partial class Funcs
+internal static partial class Funcs
 {
     public static float CompareStringsMinHash(ushort[] a, ushort[] b)
     {
@@ -46,44 +45,4 @@ public static partial class Funcs
             default: return Array.IndexOf(arr, q) >= 0; // Для массивов >4 элементов
         }
     }
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static float CompareStringsMinHash(ushort[] a, ushort[] b)
-    // {
-    //     int countA = a.Length;
-    //     int countB = b.Length;
-
-    //     if (countA == 0 || countB == 0) return 0f;
-
-    //     int intersection = 0;
-
-    //     if (countA <= countB)
-    //     {
-    //         foreach (var x in a)
-    //             if (b.Contains(x))
-    //                 intersection++;
-    //     }
-    //     else
-    //     {
-    //         foreach (var x in b)
-    //             if (a.Contains(x))
-    //                 intersection++;
-    //     }
-
-    //     return (float)intersection / (countA + countB - intersection);
-    // }
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static float CompareStringsMinHash(FrozenSet<int> qGramOne, FrozenSet<int> qGramTwo) {
-    //     if (qGramOne.Count > qGramTwo.Count) 
-    //         (qGramOne, qGramTwo) = (qGramTwo, qGramOne);
-
-    //     int intersection = 0;
-
-    //     foreach (var q in qGramTwo)
-    //         if (qGramOne.Contains(q))
-    //             intersection++;
-
-    //     return (float)intersection / (qGramOne.Count + qGramTwo.Count - intersection);
-    // }
 }

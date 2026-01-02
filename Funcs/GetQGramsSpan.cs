@@ -1,11 +1,10 @@
 using System.Runtime.CompilerServices;
-using System.Collections.Frozen;
 using System.Runtime.InteropServices;
 
 
 namespace Alga.search;
 
-public static partial class Funcs
+internal static partial class Funcs
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort[] GetQGramHashes(ReadOnlySpan<char> span, int q)
@@ -81,18 +80,18 @@ public static partial class Funcs
     // }
 }
 
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static FrozenSet<int> GetQGramHashes(ReadOnlySpan<char> span, int q) {
-    //     HashSet<int> hashSet = new HashSet<int>(span.Length - q + 1);
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// public static FrozenSet<int> GetQGramHashes(ReadOnlySpan<char> span, int q) {
+//     HashSet<int> hashSet = new HashSet<int>(span.Length - q + 1);
 
-    //     for (int i = 0; i <= span.Length - q; i++)
-    //         unchecked {
-    //             int hash = 17;
-    //             for (int j = 0; j < q; j++)
-    //                 hash = hash * 31 + span[i + j];
+//     for (int i = 0; i <= span.Length - q; i++)
+//         unchecked {
+//             int hash = 17;
+//             for (int j = 0; j < q; j++)
+//                 hash = hash * 31 + span[i + j];
 
-    //             hashSet.Add(hash);
-    //         }
+//             hashSet.Add(hash);
+//         }
 
-    //     return hashSet.ToFrozenSet();
-    // }
+//     return hashSet.ToFrozenSet();
+// }
