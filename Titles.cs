@@ -83,8 +83,6 @@ public static class Titles
 
     public static List<(Guid Id, float Coeff)>? SearchByString(string value, int take = 128, float minSimilar = 0.2f)
     {
-        var dt = DateTime.UtcNow;
-
         RefreshCollections();
 
         var normalizeTitle = Funcs.GetTitleMetadata(value);
@@ -129,8 +127,6 @@ public static class Titles
         var result = new List<(Guid, float)>(Math.Min(take, written));
         for (int i = 0; i < slice.Length && result.Count < take; i++)
             result.Add(slice[i]);
-
-        var mcs = (DateTime.UtcNow - dt).TotalMicroseconds;
 
         return result;
     }
