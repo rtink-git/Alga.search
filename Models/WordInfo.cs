@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
 
 namespace Alga.search;
-public partial class Modules
+
+public static partial class Models
 {
     /// <summary>
     /// Represents the basic information about a word, including its hash code and character range.

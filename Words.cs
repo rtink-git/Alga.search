@@ -7,45 +7,32 @@ namespace Alga.search;
 /// </summary>
 static class Words
 {
-    /// <summary>
-    /// Tries to add a word to the <see cref="BaseList"/> and compute its similarity coefficients.
-    /// </summary>
-    /// <param name="HashCode">The hash code of the word</param>
-    /// <param name="Line">The word string to be added</param>
-    /// <returns>Returns <c>true</c> if the word was added successfully; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryAdd(long HashCode, string Line)
+    public static bool TryAdd(long HashCode, string Line, Dictionary<long, Models.WordInfo> wordsMap, Dictionary<long, ConcurrentDictionary<long, float>> wordSimilarityMap)
     {
-        if (Collections.WordsMap.ContainsKey(HashCode)) return false; //string.IsNullOrWhiteSpace(Line) || 
+        if (wordsMap.ContainsKey(HashCode)) return false;
 
         var wordRange = Funcs.GetWordRange(Line);
         if (wordRange is null) return false;
 
         var qGmams = Funcs.GetQGramHashes(Line, 2);
 
-        var valueModel = new Modules.WordInfo(wordRange.Value.Start, wordRange.Value.End, qGmams);
+        var valueModel = new Models.WordInfo(wordRange.Value.Start, wordRange.Value.End, qGmams);
 
-        if (!Collections.WordsMap.TryAdd(HashCode, valueModel)) return false;
+        if (!wordsMap.TryAdd(HashCode, valueModel)) return false;
 
         if (Line.Length > 2)
         {
-            var siml = GetMatchCoefficientList(Line, valueModel);
+            var siml = GetMatchCoefficientList(Line, valueModel, wordsMap);
 
             if (siml?.Count > 0)
             {
-                Collections.WordSimilarityMap.TryAdd(HashCode, siml);
+                wordSimilarityMap.TryAdd(HashCode, siml); // поменять
 
                 foreach (var pair in siml)
                 {
-                    Collections.WordSimilarityMap.AddOrUpdate(
-                        pair.Key,
-                        _ => new ConcurrentDictionary<long, float>(new[] { new KeyValuePair<long, float>(HashCode, pair.Value) }),
-                        (_, existingDict) =>
-                        {
-                            existingDict.TryAdd(HashCode, pair.Value);
-                            return existingDict;
-                        }
-                    );
+                    if (!wordSimilarityMap.TryGetValue(pair.Key, out var existingDict)) wordSimilarityMap[pair.Key] = new ConcurrentDictionary<long, float>(new[] { new KeyValuePair<long, float>(HashCode, pair.Value) });
+                    else existingDict.TryAdd(HashCode, pair.Value);
                 }
             }
         }
@@ -59,7 +46,7 @@ static class Words
     /// </summary>
     /// <param name="line">Input string to compare against the word collection</param>
     /// <param name="wInfo">Word metadata containing Q-grams and position range</param>
-    static ConcurrentDictionary<long, float> GetMatchCoefficientList(ReadOnlySpan<char> line, Modules.WordInfo wInfo)
+    static ConcurrentDictionary<long, float> GetMatchCoefficientList(ReadOnlySpan<char> line, Models.WordInfo wInfo, Dictionary<long, Models.WordInfo> wordsMap)
     {
         float minCoefficient = line.Length switch
         {
@@ -73,7 +60,7 @@ static class Words
         var resultDict = new ConcurrentDictionary<long, float>();
         var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
-        Parallel.ForEach(Collections.WordsMap, options, word =>
+        Parallel.ForEach(wordsMap, options, word =>
         {
             var value = word.Value;
 
