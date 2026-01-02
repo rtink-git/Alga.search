@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,6 +8,7 @@ namespace Alga.search;
 /// </summary>
 public static class Titles
 {
+    private static bool isDirty = false;
     public static int SetMaxSimilarTitlesInWord { get; set; } = 1000;
 
     /// <summary>
@@ -27,14 +29,20 @@ public static class Titles
     /// </remarks>
     public static List<(long Id, float Coeff)>? SearchSimilarTitlesById(long id, int take = 128, float minSimilar = 0.2f)
     {
-        if (!Collections.TitlesWordMap.TryGetValue(id, out var words)) return null;
+        if (isDirty)
+        {
+            UpdateWordToTitlesAsFrozen();
+            UpdateTitlesWordMapAsFrozen();
+        }
+
+        if (!Collections.TitlesWordMapAsFrozen.TryGetValue(id, out var words)) return null;
 
         var allKeys = new List<long>(words.Length * 500);
         foreach (var word in words)
         {
-            if (Collections.WordToTitlesMap.TryGetValue(word, out var articles) && articles != null)
+            if (Collections.WordToTitlesMapAsFrozen.TryGetValue(word, out var articles) && articles != null)
                 try { allKeys.AddRange(articles); } catch { }
-                
+
         }
 
         int wordCount = words.Length;
@@ -75,16 +83,19 @@ public static class Titles
         return result;
     }
 
-    //Search by string
+
     public static List<(long Id, float Coeff)>? SearchByString(string value, int take = 128, float minSimilar = 0.2f)
     {
+        if (isDirty)
+            UpdateTitlesWordMapAsFrozen();
+
         var normalizeTitle = Funcs.GetTitleMetadata(value);
         if (normalizeTitle == null || normalizeTitle.Count == 0) return null;
-        
+
         var allKeys = new List<long>(normalizeTitle.Keys.Count * 500);
         foreach (var word in normalizeTitle.Keys)
         {
-            if (Collections.WordToTitlesMap.TryGetValue(word, out var articles) && articles != null)
+            if (Collections.TitlesWordMapAsFrozen.TryGetValue(word, out var articles) && articles != null)
                 try { allKeys.AddRange(articles); } catch { }
         }
 
@@ -158,265 +169,286 @@ public static class Titles
             words[i++] = word.Key;
         }
 
-        return Collections.TitlesWordMap.TryAdd(idx, words);
+        var added = Collections.TitlesWordMap.TryAdd(idx, words);
+
+        if (added) isDirty = true;
+
+        return added;
+    }
+
+    public static void UpdateTitlesWordMapAsFrozen()
+    {
+        Collections.TitlesWordMapAsFrozen = Collections.TitlesWordMap.ToFrozenDictionary();
+        isDirty = false;
+    }
+
+    internal static void UpdateWordToTitlesAsFrozen()
+    {
+        var snapshot = Collections.WordToTitlesMap.ToArray();
+
+        var frozen = snapshot.ToFrozenDictionary(
+            kv => kv.Key,
+            kv => { lock (kv.Value) return kv.Value.ToFrozenSet(); });
+
+        Collections.WordToTitlesMapAsFrozen = frozen;
     }
 }
 
 
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static List<(long, float)>? GetByIdFull(long id, byte listId = 0, int take = 100, float minSimilar = 0.1f) //, int cacheInMin = 0
-    // {
-    //     //var dt = DateTime.UtcNow; // for testing
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// public static List<(long, float)>? GetByIdFull(long id, byte listId = 0, int take = 100, float minSimilar = 0.1f) //, int cacheInMin = 0
+// {
+//     //var dt = DateTime.UtcNow; // for testing
 
-    //     try
-    //     {
-    //         var uid = Funcs.CreateUniqueId(listId, id);
-    //         if (!Collections.TitlesWordMap.TryGetValue(uid, out var astVal)) return null;
+//     try
+//     {
+//         var uid = Funcs.CreateUniqueId(listId, id);
+//         if (!Collections.TitlesWordMap.TryGetValue(uid, out var astVal)) return null;
 
-    //         return GetSearchListFullResult(new(astVal.ToArray()), listId, take, minSimilar);
+//         return GetSearchListFullResult(new(astVal.ToArray()), listId, take, minSimilar);
 
-    //         // if (cacheInMin > 0)
-    //         // {
-    //         //     var cs = new _Cache.Session(id.ToString(), listId, cacheInMin);
-    //         //     if (cs.ReturnList is not null) return cs.ReturnList;
-    //         //     cs.Set(result);
-    //         // }
+//         // if (cacheInMin > 0)
+//         // {
+//         //     var cs = new _Cache.Session(id.ToString(), listId, cacheInMin);
+//         //     if (cs.ReturnList is not null) return cs.ReturnList;
+//         //     cs.Set(result);
+//         // }
 
-    //         // return result;
-    //     }
-    //     catch
-    //     {
-    //         // var testPoint = true;  // for testing
-    //     }
-    //     finally
-    //     {
-    //         // var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; //  // for testing
-    //         // var testPoint = true;  // for testing
-    //     }
+//         // return result;
+//     }
+//     catch
+//     {
+//         // var testPoint = true;  // for testing
+//     }
+//     finally
+//     {
+//         // var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; //  // for testing
+//         // var testPoint = true;  // for testing
+//     }
 
-    //     return null;
-    // }
+//     return null;
+// }
 
-    /// <summary>
-    /// Retrieves a list of titles by their value (string), with options for filtering and caching.
-    /// </summary>
-    /// <param name="value">The title string to search for.</param>
-    /// <param name="listId">The list ID (default is 0).</param>
-    /// <param name="take">The maximum number of results to return (default is 100).</param>
-    /// <param name="minSimilar">The minimum similarity coefficient to filter titles (default is 0.1).</param>
-    /// <param name="cacheInMin">The cache expiration time in minutes (default is 0).</param>
-    /// <returns>A list of title IDs.</returns>
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static List<long>? GetByValue(string? value, byte listId = 0, int take = 100, float minSimilar = 0.2f, int cacheInMin = 0)
-    // {
-    //     var dt = DateTime.UtcNow; // for testing
+/// <summary>
+/// Retrieves a list of titles by their value (string), with options for filtering and caching.
+/// </summary>
+/// <param name="value">The title string to search for.</param>
+/// <param name="listId">The list ID (default is 0).</param>
+/// <param name="take">The maximum number of results to return (default is 100).</param>
+/// <param name="minSimilar">The minimum similarity coefficient to filter titles (default is 0.1).</param>
+/// <param name="cacheInMin">The cache expiration time in minutes (default is 0).</param>
+/// <returns>A list of title IDs.</returns>
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// public static List<long>? GetByValue(string? value, byte listId = 0, int take = 100, float minSimilar = 0.2f, int cacheInMin = 0)
+// {
+//     var dt = DateTime.UtcNow; // for testing
 
-    //     try
-    //     {
-    //         if (string.IsNullOrWhiteSpace(value)) return null;
+//     try
+//     {
+//         if (string.IsNullOrWhiteSpace(value)) return null;
 
-    //         var cs = new _Cache.Session(value, listId, take, cacheInMin);
-    //         if (cs.ReturnList is not null) return cs.ReturnList;
+//         var cs = new _Cache.Session(value, listId, take, cacheInMin);
+//         if (cs.ReturnList is not null) return cs.ReturnList;
 
-    //         var normalizeTitle = Funcs.GetTitleMetadata(value);
-    //         if (normalizeTitle == null || normalizeTitle.Count > 0) return null;
+//         var normalizeTitle = Funcs.GetTitleMetadata(value);
+//         if (normalizeTitle == null || normalizeTitle.Count > 0) return null;
 
-    //         foreach (var word in normalizeTitle)
-    //             _Words.TryAdd(Funcs.GetHashCode64(value), word.Value.Item1, word.Value.Item2);
+//         foreach (var word in normalizeTitle)
+//             _Words.TryAdd(Funcs.GetHashCode64(value), word.Value.Item1, word.Value.Item2);
 
-    //         var result = GetSearchListResult(normalizeTitle.Select(i => i.Key).ToHashSet(), listId, take, minSimilar);
-    //         cs.Set(result);
+//         var result = GetSearchListResult(normalizeTitle.Select(i => i.Key).ToHashSet(), listId, take, minSimilar);
+//         cs.Set(result);
 
-    //         return result;
-    //     }
-    //     catch
-    //     {
-    //         var testPoint = true;
-    //     }
-    //     finally
-    //     {
-    //         var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
-    //         var testPoint = true;
-    //     }
+//         return result;
+//     }
+//     catch
+//     {
+//         var testPoint = true;
+//     }
+//     finally
+//     {
+//         var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
+//         var testPoint = true;
+//     }
 
-    //     return null;
-    // }
-
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // static void CheckAndDeleteOutdateRows()
-    // {
-    //     try
-    //     {
-    //         if (SetMaxRowNumber <= 0 || Collections.TitlesWordMap.Count < SetMaxRowNumber) return;
-
-    //         var minKey = Collections.TitlesWordMap.Min(i => i.Key);
-    //         if (!Collections.TitlesWordMap.TryRemove(minKey, out _))
-    //             return;
-
-    //         foreach (var word in Collections.WordToTitlesMap)
-    //         {
-    //             if (word.Value is null) continue;
-
-    //             foreach (var i in word.Value.Keys)
-    //             {
-    //                 if (i.Equals(minKey))
-    //                 {
-    //                     word.Value.TryRemove(i, out _);
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     catch { }
-    // }
-
-    /// <summary>
-    /// Computes a list of similar articles based on shared words and similarity coefficients.
-    /// </summary>
-    /// <param name="words">A set of word hashes for which to find similar articles.</param>
-    /// <param name="listId">The list ID to consider (default is 0).</param>
-    /// <returns>A list of similar articles with their similarity coefficients.</returns>
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // static List<KeyValuePair<long, float>>? GetArticleSimilarList(HashSet<long> words)
-    // {
-    //     // var dt = DateTime.UtcNow; // for testing
-
-    //     // try {
-    //     var xl = new List<KeyValuePair<long, float>>();
-    //     var alx = new Dictionary<long, float>();
-
-    //     foreach (var word in words)
-    //     {
-    //         var ws = new Dictionary<long, float> { { word, 1 } };
-    //         if (_Words.SimilarsList.TryGetValue(word, out var wsVal))
-    //             foreach (var j in wsVal)
-    //                 ws.Add(j.Key, j.Value);
-
-    //         foreach (var j in ws)
-    //         {
-    //             if (Collections.WordToTitlesMap.TryGetValue(j.Key, out var aVal))
-    //                 foreach (var i in aVal)
-    //                     if (alx.Contains(i.Key))
-    //                         alx[i.Key] += j.Value;
-    //                     else alx.TryAdd(i.Key, j.Value);
-    //         }
-    //     }
-
-    //     foreach (var i in alx.OrderByDescending(i => i.Value))
-    //         xl.Add(new KeyValuePair<long, float>(i.Key, i.Value / words.Count));
-
-    //     return xl;
-    //     // } catch {
-    //     //     var testPoint = true;
-    //     // } finally {
-    //     //     var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
-    //     //     var testPoint = true;
-    //     // }
-
-    //     //return null;
-    // }
-
-    /// <summary>
-    /// Retrieves a list of search results based on title IDs and similarity thresholds.
-    /// </summary>
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // static List<long>? GetSearchListResult(HashSet<long> valueIds, byte listId, int take, float minSimilar)
-    // {
-    //     var matches = GetArticleSimilarList(valueIds);
-    //     if (matches is null || take <= 0) return null;
-
-    //     var result = new List<long>(Math.Min(take, matches.Count));
-    //     int count = 0;
-
-    //     foreach (var kv in matches)
-    //         if (kv.Value > minSimilar)
-    //         {
-    //             result.Add(kv.Key);
-    //             if (++count >= take)
-    //                 break;
-    //         }
-
-    //     return result;
-
-    //     // var matches = GetArticleSimilarList(valueIds);
-    //     // return matches?.Where(i => i.Value > minSimilar).Take(take).Select(i => i.Key.Id).ToList();
-    // }
-
-    // static List<(long, float)>? GetSearchListFullResult(HashSet<long> valueIds, byte listId, int take, float minSimilar)
-    // {
-    //     var matches = GetArticleSimilarList(valueIds);
-    //     if (matches is null || take <= 0) return null;
-
-    //     var result = new List<(long, float)>(Math.Min(take, matches.Count));
-    //     int count = 0;
-
-    //     foreach (var kv in matches)
-    //         if (kv.Value > minSimilar)
-    //         {
-    //             result.Add((kv.Key, kv.Value));
-    //             if (++count >= take)
-    //                 break;
-    //         }
-
-    //     return result;
-    // }
+//     return null;
+// }
 
 
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// static void CheckAndDeleteOutdateRows()
+// {
+//     try
+//     {
+//         if (SetMaxRowNumber <= 0 || Collections.TitlesWordMap.Count < SetMaxRowNumber) return;
 
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public static List<(long, float)>? GetSimilarTitlesById(long id, int take = 100, float minSimilar = 0.1f)
-    // {
-    //     var dt = DateTime.UtcNow;
-    //     if (!Collections.TitlesWordMap.TryGetValue(id, out var words)) return null;
+//         var minKey = Collections.TitlesWordMap.Min(i => i.Key);
+//         if (!Collections.TitlesWordMap.TryRemove(minKey, out _))
+//             return;
 
-    //     int estimatedSize = Math.Min(words.Length * 8, 1_000_000); // Ограничиваем максимальный размер
-    //     var allKeys = new List<long>(estimatedSize);
+//         foreach (var word in Collections.WordToTitlesMap)
+//         {
+//             if (word.Value is null) continue;
 
-    //     // 1. Быстрое накопление всех ключей
-    //     foreach (var word in words)
-    //     {
-    //         if (!Collections.WordToTitlesMap.TryGetValue(word, out var articles)) continue;
+//             foreach (var i in word.Value.Keys)
+//             {
+//                 if (i.Equals(minKey))
+//                 {
+//                     word.Value.TryRemove(i, out _);
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+//     catch { }
+// }
 
-    //         allKeys.AddRange(articles);
-    //     }
+/// <summary>
+/// Computes a list of similar articles based on shared words and similarity coefficients.
+/// </summary>
+/// <param name="words">A set of word hashes for which to find similar articles.</param>
+/// <param name="listId">The list ID to consider (default is 0).</param>
+/// <returns>A list of similar articles with their similarity coefficients.</returns>
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// static List<KeyValuePair<long, float>>? GetArticleSimilarList(HashSet<long> words)
+// {
+//     // var dt = DateTime.UtcNow; // for testing
 
-    //     int wordCount = words.Length;
-    //     int minRequiredMatches = (int)MathF.Ceiling(minSimilar * wordCount);
+//     // try {
+//     var xl = new List<KeyValuePair<long, float>>();
+//     var alx = new Dictionary<long, float>();
 
-    //     // 2. Используем Dictionary вместо ConcurrentDictionary для однопоточного подсчета
-    //     var matchCounts = new Dictionary<long, int>(allKeys.Count / 2); // Уменьшаем начальный размер
+//     foreach (var word in words)
+//     {
+//         var ws = new Dictionary<long, float> { { word, 1 } };
+//         if (_Words.SimilarsList.TryGetValue(word, out var wsVal))
+//             foreach (var j in wsVal)
+//                 ws.Add(j.Key, j.Value);
 
-    //     foreach (var key in allKeys)
-    //     {
-    //         ref int count = ref CollectionsMarshal.GetValueRefOrAddDefault(matchCounts, key, out _);
-    //         count++;
-    //     }
+//         foreach (var j in ws)
+//         {
+//             if (Collections.WordToTitlesMap.TryGetValue(j.Key, out var aVal))
+//                 foreach (var i in aVal)
+//                     if (alx.Contains(i.Key))
+//                         alx[i.Key] += j.Value;
+//                     else alx.TryAdd(i.Key, j.Value);
+//         }
+//     }
 
-    //     // 3. Отбор и сортировка результатов с оптимизацией
-    //     int resultSize = Math.Min(take, matchCounts.Count);
-    //     var buffer = new List<(long Id, float Coefficient)>(resultSize);
+//     foreach (var i in alx.OrderByDescending(i => i.Value))
+//         xl.Add(new KeyValuePair<long, float>(i.Key, i.Value / words.Count));
 
-    //     foreach (var kvp in matchCounts)
-    //     {
-    //         if (kvp.Value >= minRequiredMatches)
-    //         {
-    //             buffer.Add((kvp.Key, (float)kvp.Value / wordCount));
-    //         }
-    //     }
+//     return xl;
+//     // } catch {
+//     //     var testPoint = true;
+//     // } finally {
+//     //     var workTime = (DateTime.UtcNow - dt).TotalMicroseconds; // For testing
+//     //     var testPoint = true;
+//     // }
 
-    //     // Оптимизированная сортировка с ограничением количества элементов
-    //     if (buffer.Count > 1)
-    //     {
-    //         buffer.Sort((a, b) => b.Coefficient.CompareTo(a.Coefficient));
+//     //return null;
+// }
 
-    //         if (buffer.Count > take)
-    //         {
-    //             if (take > 0) buffer.RemoveRange(take, buffer.Count - take);
-    //             else buffer.Clear();
-    //         }
-    //     }
+/// <summary>
+/// Retrieves a list of search results based on title IDs and similarity thresholds.
+/// </summary>
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// static List<long>? GetSearchListResult(HashSet<long> valueIds, byte listId, int take, float minSimilar)
+// {
+//     var matches = GetArticleSimilarList(valueIds);
+//     if (matches is null || take <= 0) return null;
 
-    //     var dtd = (DateTime.UtcNow - dt).TotalMilliseconds;
-    //     return buffer.Count > 0 ? buffer : null;
-    // }
+//     var result = new List<long>(Math.Min(take, matches.Count));
+//     int count = 0;
+
+//     foreach (var kv in matches)
+//         if (kv.Value > minSimilar)
+//         {
+//             result.Add(kv.Key);
+//             if (++count >= take)
+//                 break;
+//         }
+
+//     return result;
+
+//     // var matches = GetArticleSimilarList(valueIds);
+//     // return matches?.Where(i => i.Value > minSimilar).Take(take).Select(i => i.Key.Id).ToList();
+// }
+
+// static List<(long, float)>? GetSearchListFullResult(HashSet<long> valueIds, byte listId, int take, float minSimilar)
+// {
+//     var matches = GetArticleSimilarList(valueIds);
+//     if (matches is null || take <= 0) return null;
+
+//     var result = new List<(long, float)>(Math.Min(take, matches.Count));
+//     int count = 0;
+
+//     foreach (var kv in matches)
+//         if (kv.Value > minSimilar)
+//         {
+//             result.Add((kv.Key, kv.Value));
+//             if (++count >= take)
+//                 break;
+//         }
+
+//     return result;
+// }
+
+
+
+// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// public static List<(long, float)>? GetSimilarTitlesById(long id, int take = 100, float minSimilar = 0.1f)
+// {
+//     var dt = DateTime.UtcNow;
+//     if (!Collections.TitlesWordMap.TryGetValue(id, out var words)) return null;
+
+//     int estimatedSize = Math.Min(words.Length * 8, 1_000_000); // Ограничиваем максимальный размер
+//     var allKeys = new List<long>(estimatedSize);
+
+//     // 1. Быстрое накопление всех ключей
+//     foreach (var word in words)
+//     {
+//         if (!Collections.WordToTitlesMap.TryGetValue(word, out var articles)) continue;
+
+//         allKeys.AddRange(articles);
+//     }
+
+//     int wordCount = words.Length;
+//     int minRequiredMatches = (int)MathF.Ceiling(minSimilar * wordCount);
+
+//     // 2. Используем Dictionary вместо ConcurrentDictionary для однопоточного подсчета
+//     var matchCounts = new Dictionary<long, int>(allKeys.Count / 2); // Уменьшаем начальный размер
+
+//     foreach (var key in allKeys)
+//     {
+//         ref int count = ref CollectionsMarshal.GetValueRefOrAddDefault(matchCounts, key, out _);
+//         count++;
+//     }
+
+//     // 3. Отбор и сортировка результатов с оптимизацией
+//     int resultSize = Math.Min(take, matchCounts.Count);
+//     var buffer = new List<(long Id, float Coefficient)>(resultSize);
+
+//     foreach (var kvp in matchCounts)
+//     {
+//         if (kvp.Value >= minRequiredMatches)
+//         {
+//             buffer.Add((kvp.Key, (float)kvp.Value / wordCount));
+//         }
+//     }
+
+//     // Оптимизированная сортировка с ограничением количества элементов
+//     if (buffer.Count > 1)
+//     {
+//         buffer.Sort((a, b) => b.Coefficient.CompareTo(a.Coefficient));
+
+//         if (buffer.Count > take)
+//         {
+//             if (take > 0) buffer.RemoveRange(take, buffer.Count - take);
+//             else buffer.Clear();
+//         }
+//     }
+
+//     var dtd = (DateTime.UtcNow - dt).TotalMilliseconds;
+//     return buffer.Count > 0 ? buffer : null;
+// }

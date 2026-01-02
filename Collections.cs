@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 
 namespace Alga.search;
 
@@ -28,6 +29,8 @@ public class Collections
     /// Average memory size for 100,000 rows (& 1000 in HashSet): 1.3 GB
     /// </summary>
     internal static readonly ConcurrentDictionary<long, HashSet<long>> WordToTitlesMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
+    internal static FrozenDictionary<long, FrozenSet<long>> WordToTitlesMapAsFrozen = FrozenDictionary<long, FrozenSet<long>>.Empty;
+
 
     /// <summary>
     /// Global mapping of title IDs to the sets of word identifiers they contain.
@@ -35,5 +38,7 @@ public class Collections
     /// Value: FrozenSet of word IDs (long), representing the distinct words extracted from the title.
     /// Average memory size for 100,000 rows: 17 MB.
     /// </summary>
-    public static readonly ConcurrentDictionary<long, long[]> TitlesWordMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
+    internal static readonly ConcurrentDictionary<long, long[]> TitlesWordMap = new(concurrencyLevel: Environment.ProcessorCount, capacity: 10000);
+
+    internal static FrozenDictionary<long, long[]> TitlesWordMapAsFrozen = FrozenDictionary<long, long[]>.Empty;
 }
