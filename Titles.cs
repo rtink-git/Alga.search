@@ -151,7 +151,7 @@ public static class Titles
     /// </summary>
     private static void RefreshCollections()
     {
-        if (!_isDirty || (DateTime.UtcNow - _lastAddTitleDt).TotalSeconds < 60) return;
+        if (!_isDirty) return; // || (DateTime.UtcNow - _lastAddTitleDt).TotalSeconds < 60
 
         _isDirty = false;
         _lastAddTitleDt = DateTime.UtcNow;
